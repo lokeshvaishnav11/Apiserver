@@ -164,7 +164,9 @@ app.get('/sportapi/match-list', async (req, res) => {
       });
     }
 
-    // 1. Diamond API
+    // -----------------------------
+    // 1. Get Diamond matches
+    // -----------------------------
     const diamondResponse = await upstream.get(
       `${API_BASE_URL}/matches`,
       {
@@ -175,7 +177,9 @@ app.get('/sportapi/match-list', async (req, res) => {
 
     const diamondData = diamondResponse.data;
 
-    // 2. Betfair API
+    // -----------------------------
+    // 2. Get Betfair matches
+    // -----------------------------
     const betfairResponse = await upstream.get(
       BETFAIR_MATCHES_URL,
       {
@@ -186,33 +190,63 @@ app.get('/sportapi/match-list', async (req, res) => {
     const betfairMatches =
       betfairResponse.data?.data?.t1 || [];
 
-    // 3. Betfair GMID -> EVENTID mapping
-    const betfairMap = new Map();
+    // -----------------------------
+    // 3. Create Betfair maps
+    // -----------------------------
 
-    for (const bf of betfairMatches) {
+    // gmid -> eventid
+    const betfairGmidMap = new Map();
+
+    // ename -> eventid (fallback)
+    const betfairNameMap = new Map();
+
+    betfairMatches.forEach((bf) => {
       const gmid = String(bf?.gmid ?? '').trim();
       const eventid = String(bf?.eventid ?? '').trim();
 
-      if (gmid && eventid) {
-        betfairMap.set(gmid, eventid);
-      }
-    }
+      const name = String(
+        bf?.ename || bf?.eventName || ''
+      )
+        .trim()
+        .toLowerCase();
 
-    // 4. Diamond matches
+      if (gmid && eventid) {
+        betfairGmidMap.set(gmid, eventid);
+      }
+
+      if (name && eventid) {
+        betfairNameMap.set(name, eventid);
+      }
+    });
+
+    // -----------------------------
+    // 4. Add btid to Diamond
+    // -----------------------------
     const diamondMatches =
       diamondData?.data?.t1 || [];
 
-    for (const diamond of diamondMatches) {
-      const diamondGmid =
-        String(diamond?.gmid ?? '').trim();
+    diamondMatches.forEach((diamond) => {
 
-      // Diamond gmid se Betfair eventid nikalo
-      const betfairEventId =
-        betfairMap.get(diamondGmid);
+      const diamondGmid = String(
+        diamond?.gmid ?? ''
+      ).trim();
 
-      // Betfair eventid -> Diamond btid
-      diamond.btid = betfairEventId || '';
-    }
+      // First try: Diamond gmid == Betfair gmid
+      let btid = betfairGmidMap.get(diamondGmid);
+
+      // Second try: match name
+      if (!btid) {
+        const diamondName = String(
+          diamond?.ename || diamond?.eventName || ''
+        )
+          .trim()
+          .toLowerCase();
+
+        btid = betfairNameMap.get(diamondName);
+      }
+
+      diamond.btid = btid || '';
+    });
 
     return res.status(200).json(diamondData);
 
@@ -231,7 +265,6 @@ app.get('/sportapi/match-list', async (req, res) => {
     });
   }
 });
-
 // 3. GET /sportapi/privateData -- 600ms, marketId intentionally excluded from key.
 app.get('/sportapi/privateData', async (req, res) => {
   const { marketId, gmid, sportsid } = req.query;
