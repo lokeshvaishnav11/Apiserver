@@ -129,28 +129,108 @@ const fetchFromApi = async (path, params, res) => {
 app.get('/sportapi', async (req, res) => fetchFromApi('', {}, res));
 
 // 2. GET /sportapi/match-list -- original merge and error behavior retained
+// app.get('/sportapi/match-list', async (req, res) => {
+//   try {
+//     const { sportsid } = req.query;
+//     if (!sportsid) return res.status(400).json({ error: 'sportsid query parameter is required' });
+
+//     const diamondResponse = await upstream.get(`${API_BASE_URL}/matches`, { headers: HEADERS, params: { sportsid } });
+//     const diamondData = diamondResponse.data;
+//     const betfairResponse = await upstream.get(BETFAIR_MATCHES_URL, { timeout: 5000 });
+//     const betfairMatches = betfairResponse.data?.data?.t1 || [];
+//     const betfairMap = new Map();
+//     betfairMatches.forEach((bf) => {
+//       if (bf.eventid != null) betfairMap.set(String(bf.eventid), String(bf.gid || bf.gameId || ''));
+//     });
+//     const diamondMatches = diamondData?.data?.t1 || [];
+//     diamondMatches.forEach((diamond) => {
+//       const btid = betfairMap.get(String(diamond.gmid));
+//       diamond.btid = btid || '';
+//     });
+//     return res.status(200).json(diamondData);
+//   } catch (error) {
+//     console.error('Error fetching match-list:', error.response?.data || error.message);
+//     return res.status(error.response?.status || 500).json({ error: error.response?.data || 'Internal Server Error' });
+//   }
+// });
+
 app.get('/sportapi/match-list', async (req, res) => {
   try {
     const { sportsid } = req.query;
-    if (!sportsid) return res.status(400).json({ error: 'sportsid query parameter is required' });
 
-    const diamondResponse = await upstream.get(`${API_BASE_URL}/matches`, { headers: HEADERS, params: { sportsid } });
+    if (!sportsid) {
+      return res.status(400).json({
+        error: 'sportsid query parameter is required'
+      });
+    }
+
+    // Diamond matches
+    const diamondResponse = await upstream.get(
+      `${API_BASE_URL}/matches`,
+      {
+        headers: HEADERS,
+        params: { sportsid }
+      }
+    );
+
     const diamondData = diamondResponse.data;
-    const betfairResponse = await upstream.get(BETFAIR_MATCHES_URL, { timeout: 5000 });
-    const betfairMatches = betfairResponse.data?.data?.t1 || [];
+
+    // Betfair matches
+    const betfairResponse = await upstream.get(
+      BETFAIR_MATCHES_URL,
+      {
+        timeout: 5000
+      }
+    );
+
+    const betfairMatches =
+      betfairResponse.data?.data?.t1 || [];
+
+    /*
+      Betfair:
+        gmid    -> eventid
+
+      Example:
+        640154297 -> 36155820
+    */
     const betfairMap = new Map();
+
     betfairMatches.forEach((bf) => {
-      if (bf.eventid != null) betfairMap.set(String(bf.eventid), String(bf.gid || bf.gameId || ''));
+      if (bf.gmid != null && bf.eventid != null) {
+        betfairMap.set(
+          String(bf.gmid),
+          String(bf.eventid)
+        );
+      }
     });
-    const diamondMatches = diamondData?.data?.t1 || [];
+
+    // Diamond matches me btid add karo
+    const diamondMatches =
+      diamondData?.data?.t1 || [];
+
     diamondMatches.forEach((diamond) => {
-      const btid = betfairMap.get(String(diamond.gmid));
+      const btid = betfairMap.get(
+        String(diamond.gmid)
+      );
+
       diamond.btid = btid || '';
     });
+
     return res.status(200).json(diamondData);
+
   } catch (error) {
-    console.error('Error fetching match-list:', error.response?.data || error.message);
-    return res.status(error.response?.status || 500).json({ error: error.response?.data || 'Internal Server Error' });
+    console.error(
+      'Error fetching match-list:',
+      error.response?.data || error.message
+    );
+
+    return res
+      .status(error.response?.status || 500)
+      .json({
+        error:
+          error.response?.data ||
+          'Internal Server Error'
+      });
   }
 });
 
