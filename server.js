@@ -164,7 +164,7 @@ app.get('/sportapi/match-list', async (req, res) => {
       });
     }
 
-    // Diamond matches
+    // 1. Diamond API
     const diamondResponse = await upstream.get(
       `${API_BASE_URL}/matches`,
       {
@@ -175,7 +175,7 @@ app.get('/sportapi/match-list', async (req, res) => {
 
     const diamondData = diamondResponse.data;
 
-    // Betfair matches
+    // 2. Betfair API
     const betfairResponse = await upstream.get(
       BETFAIR_MATCHES_URL,
       {
@@ -186,35 +186,33 @@ app.get('/sportapi/match-list', async (req, res) => {
     const betfairMatches =
       betfairResponse.data?.data?.t1 || [];
 
-    /*
-      Betfair:
-        gmid    -> eventid
-
-      Example:
-        640154297 -> 36155820
-    */
+    // 3. Betfair GMID -> EVENTID mapping
     const betfairMap = new Map();
 
-    betfairMatches.forEach((bf) => {
-      if (bf.gmid != null && bf.eventid != null) {
-        betfairMap.set(
-          String(bf.gmid),
-          String(bf.eventid)
-        );
-      }
-    });
+    for (const bf of betfairMatches) {
+      const gmid = String(bf?.gmid ?? '').trim();
+      const eventid = String(bf?.eventid ?? '').trim();
 
-    // Diamond matches me btid add karo
+      if (gmid && eventid) {
+        betfairMap.set(gmid, eventid);
+      }
+    }
+
+    // 4. Diamond matches
     const diamondMatches =
       diamondData?.data?.t1 || [];
 
-    diamondMatches.forEach((diamond) => {
-      const btid = betfairMap.get(
-        String(diamond.gmid)
-      );
+    for (const diamond of diamondMatches) {
+      const diamondGmid =
+        String(diamond?.gmid ?? '').trim();
 
-      diamond.btid = btid || '';
-    });
+      // Diamond gmid se Betfair eventid nikalo
+      const betfairEventId =
+        betfairMap.get(diamondGmid);
+
+      // Betfair eventid -> Diamond btid
+      diamond.btid = betfairEventId || '';
+    }
 
     return res.status(200).json(diamondData);
 
@@ -224,13 +222,13 @@ app.get('/sportapi/match-list', async (req, res) => {
       error.response?.data || error.message
     );
 
-    return res
-      .status(error.response?.status || 500)
-      .json({
-        error:
-          error.response?.data ||
-          'Internal Server Error'
-      });
+    return res.status(
+      error.response?.status || 500
+    ).json({
+      error:
+        error.response?.data ||
+        'Internal Server Error'
+    });
   }
 });
 
