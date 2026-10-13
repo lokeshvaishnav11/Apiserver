@@ -154,6 +154,7 @@ app.get('/sportapi', async (req, res) => fetchFromApi('', {}, res));
 //   }
 // });
 
+
 app.get('/sportapi/match-list', async (req, res) => {
   try {
     const { sportsid } = req.query;
@@ -187,8 +188,11 @@ app.get('/sportapi/match-list', async (req, res) => {
       }
     );
 
-    const betfairMatches =
-      betfairResponse.data?.data?.t1 || [];
+    // Betfair t1 + t2 combine
+    const betfairMatches = [
+      ...(betfairResponse.data?.data?.t1 || []),
+      ...(betfairResponse.data?.data?.t2 || [])
+    ];
 
     // -----------------------------
     // 3. Create Betfair maps
@@ -201,8 +205,13 @@ app.get('/sportapi/match-list', async (req, res) => {
     const betfairNameMap = new Map();
 
     betfairMatches.forEach((bf) => {
-      const gmid = String(bf?.gmid ?? '').trim();
-      const eventid = String(bf?.eventid ?? '').trim();
+      const gmid = String(
+        bf?.gmid ?? ''
+      ).trim();
+
+      const eventid = String(
+        bf?.eventid ?? ''
+      ).trim();
 
       const name = String(
         bf?.ename || bf?.eventName || ''
@@ -220,24 +229,31 @@ app.get('/sportapi/match-list', async (req, res) => {
     });
 
     // -----------------------------
-    // 4. Add btid to Diamond
+    // 4. Diamond t1 + t2 combine
     // -----------------------------
-    const diamondMatches =
-      diamondData?.data?.t1 || [];
+    const diamondMatches = [
+      ...(diamondData?.data?.t1 || []),
+      ...(diamondData?.data?.t2 || [])
+    ];
 
+    // -----------------------------
+    // 5. Add btid to ALL matches
+    // -----------------------------
     diamondMatches.forEach((diamond) => {
 
       const diamondGmid = String(
         diamond?.gmid ?? ''
       ).trim();
 
-      // First try: Diamond gmid == Betfair gmid
+      // First: Match by gmid
       let btid = betfairGmidMap.get(diamondGmid);
 
-      // Second try: match name
+      // Second: Match by name
       if (!btid) {
         const diamondName = String(
-          diamond?.ename || diamond?.eventName || ''
+          diamond?.ename ||
+          diamond?.eventName ||
+          ''
         )
           .trim()
           .toLowerCase();
@@ -248,6 +264,9 @@ app.get('/sportapi/match-list', async (req, res) => {
       diamond.btid = btid || '';
     });
 
+    // -----------------------------
+    // 6. Return original structure
+    // -----------------------------
     return res.status(200).json(diamondData);
 
   } catch (error) {
@@ -265,6 +284,7 @@ app.get('/sportapi/match-list', async (req, res) => {
     });
   }
 });
+
 // 3. GET /sportapi/privateData -- 600ms, marketId intentionally excluded from key.
 app.get('/sportapi/privateData', async (req, res) => {
   const { marketId, gmid, sportsid } = req.query;
