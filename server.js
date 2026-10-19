@@ -377,7 +377,9 @@ const CASINO_BASE_URL =
 // Yahan apne clients ke actual public IP daalo
 const ALLOWED_IPS = [
   
-  "64.227.139.183"
+  "64.227.139.183",
+  "148.113.47.67",
+  
 ];
 
 function ipWhitelist(req, res, next) {
