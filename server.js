@@ -384,8 +384,9 @@ const ALLOWED_IPS = [
 
   // "93.127.166.19",
   "139.59.88.251",
-  "201.18.209.214",
-  "66.116.254.114"
+  // "201.18.209.214",
+  // "66.116.254.114"
+  "143.244.140.154"
   
 ];
 
@@ -927,6 +928,23 @@ app.get('/sportapi/sportsResult', async (req, res) => {
 // 5. GET /sportapi/tv1/sports
 // Uncached
 // =====================================
+
+
+app.get('/sportapi/data/v1', async (req, res) => {
+  const {
+    sportsid,
+    gmid
+  } = req.query;
+
+  if (!sportsid || !gmid) {
+    return res.status(400).json({
+      error:
+        'sportsid and gmid query parameters are required'
+    });
+  }
+const data = await axios.get(`https://diamond-sports-api-demo-s2.daimond-api.site/gamedataPrivate?key=JSSSGHFHNSHHOKJLKLHK&gmid=${gmid}&etid=${sportsid}`)
+ res.status(200).json(data.data)
+});
 
 app.get('/sportapi/tv1/sports', async (req, res) => {
   const {
