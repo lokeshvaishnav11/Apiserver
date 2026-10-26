@@ -930,7 +930,7 @@ app.get('/sportapi/sportsResult', async (req, res) => {
 // =====================================
 
 
-app.get('/sportapi/data/v1', async (req, res) => {
+app.get('/data/v1', async (req, res) => {
   const {
     sportsid,
     gmid
