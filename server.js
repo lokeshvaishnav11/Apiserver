@@ -386,11 +386,12 @@ const ALLOWED_IPS = [
   "139.59.88.251",// payment done
   // "201.18.209.214",
   // "66.116.254.114"
-  "143.244.140.154",
-  "187.127.149.168",
-  "201.18.209.214",
-  "66.116.254.114",
-  "187.127.169.19"
+  "143.244.140.154", // 10 days demo 
+  // "187.127.149.168",
+  // "201.18.209.214",
+  // "66.116.254.114",
+  // "187.127.169.19"
+ "47.15.74.9", // my public ip
 
   
 ];
@@ -713,14 +714,142 @@ app.get('/sportapi', async (req, res) =>
 // 2. GET /sportapi/match-list
 // =====================================
 
+// app.get('/sportapi/match-list', async (req, res) => {
+//   try {
+//     const { sportsid } = req.query;
+
+//     if (!sportsid) {
+//       return res.status(400).json({
+//         error:
+//           'sportsid query parameter is required'
+//       });
+//     }
+
+//     // 1. Get Diamond matches
+//     const diamondResponse = await upstream.get(
+//       `${API_BASE_URL}/matches`,
+//       {
+//         headers: HEADERS,
+//         params: { sportsid }
+//       }
+//     );
+
+//     const diamondData = diamondResponse.data;
+
+//     // 2. Get Betfair matches
+//     const betfairResponse = await upstream.get(
+//       BETFAIR_MATCHES_URL,
+//       {
+//         timeout: 5000
+//       }
+//     );
+
+//     // Betfair t1 + t2 combine
+//     const betfairMatches = [
+//       ...(betfairResponse.data?.data?.t1 || []),
+//       ...(betfairResponse.data?.data?.t2 || [])
+//     ];
+
+//     // 3. Create Betfair maps
+//     const betfairGmidMap = new Map();
+//     const betfairNameMap = new Map();
+
+//     betfairMatches.forEach((bf) => {
+//       const gmid = String(
+//         bf?.gmid ?? ''
+//       ).trim();
+
+//       const eventid = String(
+//         bf?.eventid ?? ''
+//       ).trim();
+
+//       const name = String(
+//         bf?.ename ||
+//         bf?.eventName ||
+//         ''
+//       )
+//         .trim()
+//         .toLowerCase();
+
+//       if (gmid && eventid) {
+//         betfairGmidMap.set(
+//           gmid,
+//           eventid
+//         );
+//       }
+
+//       if (name && eventid) {
+//         betfairNameMap.set(
+//           name,
+//           eventid
+//         );
+//       }
+//     });
+
+//     // 4. Diamond t1 + t2 combine
+//     const diamondMatches = [
+//       ...(diamondData?.data?.t1 || []),
+//       ...(diamondData?.data?.t2 || [])
+//     ];
+
+//     // 5. Add btid to ALL matches
+//     diamondMatches.forEach((diamond) => {
+//       const diamondGmid = String(
+//         diamond?.gmid ?? ''
+//       ).trim();
+
+//       // First: Match by gmid
+//       let btid =
+//         betfairGmidMap.get(diamondGmid);
+
+//       // Second: Match by name
+//       if (!btid) {
+//         const diamondName = String(
+//           diamond?.ename ||
+//           diamond?.eventName ||
+//           ''
+//         )
+//           .trim()
+//           .toLowerCase();
+
+//         btid =
+//           betfairNameMap.get(diamondName);
+//       }
+
+//       diamond.btid = btid || '';
+//     });
+
+//     // 6. Return original structure
+//     return res.status(200).json(
+//       diamondData
+//     );
+
+//   } catch (error) {
+//     console.error(
+//       'Error fetching match-list:',
+//       error.response?.data ||
+//       error.message
+//     );
+
+//     return res.status(
+//       error.response?.status || 500
+//     ).json({
+//       error:
+//         error.response?.data ||
+//         'Internal Server Error'
+//     });
+//   }
+// });
+
+
+
 app.get('/sportapi/match-list', async (req, res) => {
   try {
     const { sportsid } = req.query;
 
     if (!sportsid) {
       return res.status(400).json({
-        error:
-          'sportsid query parameter is required'
+        error: 'sportsid query parameter is required'
       });
     }
 
@@ -735,99 +864,93 @@ app.get('/sportapi/match-list', async (req, res) => {
 
     const diamondData = diamondResponse.data;
 
-    // 2. Get Betfair matches
-    const betfairResponse = await upstream.get(
-      BETFAIR_MATCHES_URL,
-      {
-        timeout: 5000
-      }
-    );
-
-    // Betfair t1 + t2 combine
-    const betfairMatches = [
-      ...(betfairResponse.data?.data?.t1 || []),
-      ...(betfairResponse.data?.data?.t2 || [])
-    ];
-
-    // 3. Create Betfair maps
-    const betfairGmidMap = new Map();
-    const betfairNameMap = new Map();
-
-    betfairMatches.forEach((bf) => {
-      const gmid = String(
-        bf?.gmid ?? ''
-      ).trim();
-
-      const eventid = String(
-        bf?.eventid ?? ''
-      ).trim();
-
-      const name = String(
-        bf?.ename ||
-        bf?.eventName ||
-        ''
-      )
-        .trim()
-        .toLowerCase();
-
-      if (gmid && eventid) {
-        betfairGmidMap.set(
-          gmid,
-          eventid
-        );
-      }
-
-      if (name && eventid) {
-        betfairNameMap.set(
-          name,
-          eventid
-        );
-      }
-    });
-
-    // 4. Diamond t1 + t2 combine
+    // 2. Get Diamond matches
     const diamondMatches = [
       ...(diamondData?.data?.t1 || []),
       ...(diamondData?.data?.t2 || [])
     ];
 
-    // 5. Add btid to ALL matches
-    diamondMatches.forEach((diamond) => {
-      const diamondGmid = String(
-        diamond?.gmid ?? ''
-      ).trim();
-
-      // First: Match by gmid
-      let btid =
-        betfairGmidMap.get(diamondGmid);
-
-      // Second: Match by name
-      if (!btid) {
-        const diamondName = String(
-          diamond?.ename ||
-          diamond?.eventName ||
-          ''
-        )
-          .trim()
-          .toLowerCase();
-
-        btid =
-          betfairNameMap.get(diamondName);
-      }
-
-      diamond.btid = btid || '';
+    // Default btid for all matches
+    diamondMatches.forEach((match) => {
+      match.btid = '';
     });
 
-    // 6. Return original structure
-    return res.status(200).json(
-      diamondData
-    );
+    // 3. Fetch Betfair API separately
+    try {
+      const betfairResponse = await upstream.get(
+        BETFAIR_MATCHES_URL,
+        {
+          timeout: 5000
+        }
+      );
+
+      const betfairMatches = [
+        ...(betfairResponse.data?.data?.t1 || []),
+        ...(betfairResponse.data?.data?.t2 || [])
+      ];
+
+      // 4. Create Betfair maps
+      const betfairGmidMap = new Map();
+      const betfairNameMap = new Map();
+
+      betfairMatches.forEach((bf) => {
+        const gmid = String(
+          bf?.gmid ?? ''
+        ).trim();
+
+        const eventid = String(
+          bf?.eventid ?? ''
+        ).trim();
+
+        const name = String(
+          bf?.ename || bf?.eventName || ''
+        ).trim().toLowerCase();
+
+        if (gmid && eventid) {
+          betfairGmidMap.set(gmid, eventid);
+        }
+
+        if (name && eventid) {
+          betfairNameMap.set(name, eventid);
+        }
+      });
+
+      // 5. Match Betfair IDs
+      diamondMatches.forEach((diamond) => {
+        const diamondGmid = String(
+          diamond?.gmid ?? ''
+        ).trim();
+
+        let btid = betfairGmidMap.get(diamondGmid);
+
+        if (!btid) {
+          const diamondName = String(
+            diamond?.ename ||
+            diamond?.eventName ||
+            ''
+          ).trim().toLowerCase();
+
+          btid = betfairNameMap.get(diamondName);
+        }
+
+        diamond.btid = btid || '';
+      });
+
+    } catch (betfairError) {
+      // Betfair failure should not stop Diamond data
+      console.error(
+        'Betfair API failed:',
+        betfairError.message
+      );
+    }
+
+    // 6. Always return Diamond data
+    return res.status(200).json(diamondData);
 
   } catch (error) {
     console.error(
-      'Error fetching match-list:',
-      error.response?.data ||
-      error.message
+      'Diamond API Error:',
+      error.response?.data || error.message
     );
 
     return res.status(
