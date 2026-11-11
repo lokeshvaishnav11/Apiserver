@@ -972,50 +972,109 @@ app.get('/sportapi/match-list', async (req, res) => {
 // Cache: 600ms
 // =====================================
 
-app.get('/sportapi/privateData', async (req, res) => {
-  const {
-    marketId,
-    gmid,
-    sportsid
-  } = req.query;
+const PRIVATE_DATA_URL =
+  "https://diamond-sports-api-demo-s2.daimond-api.site/gamedataPrivate";
 
-  if (!marketId || !gmid || !sportsid) {
-    return res.status(400).json({
-      error:
-        'marketId, gmid, and sportsid query parameters are required'
-    });
-  }
+const PRIVATE_DATA_KEY = "JSSSGHFHNSHHOKJLKLHK";
 
-  const key = cacheKey(
-    'privateData',
-    [gmid, sportsid]
-  );
+// app.get('/sportapi/privateData', async (req, res) => {
+//   const {
+//     marketId,
+//     gmid,
+//     sportsid
+//   } = req.query;
 
-  const result = await cachedRequest(
-    key,
-    600,
-    () =>
-      requestUpstream(
-        `${API_BASE_URL}/odds`,
-        {
-          headers: HEADERS,
-          params: {
-            marketId,
-            gmid,
-            sportsid
-          }
-        }
-      )
-  );
+//   if (!marketId || !gmid || !sportsid) {
+//     return res.status(400).json({
+//       error:
+//         'marketId, gmid, and sportsid query parameters are required'
+//     });
+//   }
 
-  return sendResult(res, result);
-});
+//   const key = cacheKey(
+//     'privateData',
+//     [gmid, sportsid]
+//   );
+
+//   // const result = await cachedRequest(
+//   //   key,
+//   //   600,
+//   //   () =>
+//   //     requestUpstream(
+//   //       `${API_BASE_URL}/odds`,
+//   //       {
+//   //         headers: HEADERS,
+//   //         params: {
+//   //           marketId,
+//   //           gmid,
+//   //           sportsid
+//   //         }
+//   //       }
+//   //     )
+//   // );
+
+//   const result = await axios.get(`https://diamond-sports-api-demo-s2.daimond-api.site/gamedataPrivate?key=JSSSGHFHNSHHOKJLKLHK&gmid=${gmid}&etid=${sportsid}`)
+
+
+//   return sendResult(res, result);
+// });
 
 
 // =====================================
 // 4. GET /sportapi/sportsResult
 // Cache: 1000ms
 // =====================================
+
+// =====================================
+// GET /sportapi/privateData
+// NEW UPSTREAM ONLY
+// REDIS CACHE: 600ms
+// =====================================
+
+app.get("/sportapi/privateData", async (req, res) => {
+  try {
+    const { marketId, gmid, sportsid } = req.query;
+
+    if (!marketId || !gmid || !sportsid) {
+      return res.status(400).json({
+        error:
+          "marketId, gmid, and sportsid query parameters are required",
+      });
+    }
+
+    const key = cacheKey("privateData", [
+      gmid,
+      sportsid,
+    ]);
+
+    const result = await cachedRequest(
+      key,
+      600,
+      () =>
+        requestUpstream(PRIVATE_DATA_URL, {
+          params: {
+            key: PRIVATE_DATA_KEY,
+            gmid,
+            etid: sportsid,
+          },
+          timeout: 5000,
+        })
+    );
+
+    return sendResult(res, result);
+  } catch (error) {
+    console.error(
+      "PrivateData Error:",
+      error.message
+    );
+
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+});
+
+
 
 app.get('/sportapi/sportsResult', async (req, res) => {
   const {
