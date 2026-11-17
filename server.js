@@ -968,6 +968,7 @@ app.get('/sportapi', async (req, res) =>
 //     });
 //   }
 // });
+  const PRIVATE_DATA_KEY = "JSSSGHFHNSHHOKJLKLHK";
 
 
 
@@ -989,9 +990,9 @@ app.get("/sportapi/match-list", async (req, res) => {
       MATCH_LIST_URL,
       {
         params: {
-          key: process.env.MATCH_LIST_KEY || "",
+          key: PRIVATE_DATA_KEY || "",
           etid: sportsid,
-          key1: process.env.MATCH_LIST_KEY1 || "",
+          key1:PRIVATE_DATA_KEY|| "",
         },
         timeout: 5000,
       }
@@ -1095,7 +1096,7 @@ app.get("/sportapi/match-list", async (req, res) => {
 const PRIVATE_DATA_URL =
   "https://diamond-sports-api-demo-s2.daimond-api.site/gamedataPrivate";
 
-const PRIVATE_DATA_KEY = "JSSSGHFHNSHHOKJLKLHK";
+// const PRIVATE_DATA_KEY = "JSSSGHFHNSHHOKJLKLHK";
 
 // app.get('/sportapi/privateData', async (req, res) => {
 //   const {
@@ -1270,7 +1271,7 @@ app.get("/sportapi/sportsResult", async (req, res) => {
             sid: sportsid,
             etid: sportsid,
             gmid: gmid,
-            key: process.env.SPORTS_RESULT_KEY || "",
+            key: PRIVATE_DATA_KEY || "",
           },
           timeout: 5000,
         })
