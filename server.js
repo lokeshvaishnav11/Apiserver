@@ -1001,7 +1001,7 @@ app.get("/sportapi/match-list", async (req, res) => {
       }
     );
 
-    const diamondData = diamondResponse.data;
+    const diamondData = diamondResponse.data.data;
 
     const diamondMatches = [
       ...(diamondData?.data?.t1 || []),
