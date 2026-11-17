@@ -400,7 +400,7 @@ const ALLOWED_IPS = [
  "161.97.179.118",
   "127.0.0.1",
   "::1",
-  
+
 
   
 ];
@@ -431,7 +431,7 @@ function ipWhitelist(req, res, next) {
 }
 
 // Protect all sportapi and casinoapi endpoints
-app.use(['/sportapi', '/casinoapi'], ipWhitelist);
+// app.use(['/sportapi', '/casinoapi'], ipWhitelist);
 
 
 // =====================================
