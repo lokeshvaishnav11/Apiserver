@@ -1436,38 +1436,38 @@ app.get("/casinoapi/casinoResult", async (req, res) => {
 // Cache: 600ms
 // =====================================
 
-// app.get('/casinoapi/casinoData', async (req, res) => {
-//   const { gtype } = req.query;
+app.get('/casinoapi/casinoData', async (req, res) => {
+  const { gtype } = req.query;
 
-//   if (!gtype) {
-//     return res.status(400).json({
-//       error:
-//         'gtype query parameter is required'
-//     });
-//   }
+  if (!gtype) {
+    return res.status(400).json({
+      error:
+        'gtype query parameter is required'
+    });
+  }
 
-//   const key = cacheKey(
-//     'casinoData',
-//     [gtype]
-//   );
+  const key = cacheKey(
+    'casinoData',
+    [gtype]
+  );
 
-//   const result = await cachedRequest(
-//     key,
-//     600,
-//     () =>
-//       requestUpstream(
-//         `${CASINO_BASE_URL}/data`,
-//         {
-//           headers: HEADERS,
-//           params: {
-//             gtype
-//           }
-//         }
-//       )
-//   );
+  const result = await cachedRequest(
+    key,
+    600,
+    () =>
+      requestUpstream(
+        `${CASINO_BASE_URL}/data`,
+        {
+          headers: HEADERS,
+          params: {
+            gtype
+          }
+        }
+      )
+  );
 
-//   return sendResult(res, result);
-// });
+  return sendResult(res, result);
+});
 
 
 // =====================================
@@ -1479,93 +1479,93 @@ app.get("/casinoapi/casinoResult", async (req, res) => {
 const NEW_CASINO_BASE_URL =
   "https://diamond-sports-api-demo-s2.daimond-api.site";
 
-app.get("/casinoapi/casinoData", async (req, res) => {
-  try {
-    const { gtype } = req.query;
+// app.get("/casinoapi/casinoData", async (req, res) => {
+//   try {
+//     const { gtype } = req.query;
 
-    if (!gtype) {
-      return res.status(400).json({
-        error: "gtype query parameter is required",
-      });
-    }
+//     if (!gtype) {
+//       return res.status(400).json({
+//         error: "gtype query parameter is required",
+//       });
+//     }
 
-    const key = cacheKey("casinoDataV2", [gtype]);
+//     const key = cacheKey("casinoDataV2", [gtype]);
 
-    const result = await cachedRequest(key, 600, async () => {
-      try {
-        const params = {
-          key: PRIVATE_DATA_KEY,
-          gtype,
-          key1: PRIVATE_DATA_KEY,
-        };
+//     const result = await cachedRequest(key, 600, async () => {
+//       try {
+//         const params = {
+//           key: PRIVATE_DATA_KEY,
+//           gtype,
+//           key1: PRIVATE_DATA_KEY,
+//         };
 
-        // Both APIs call in parallel
-        const [tableDataResponse, lastResultResponse] =
-          await Promise.all([
-            upstream.get(
-              `${NEW_CASINO_BASE_URL}/casino/data`,
-              {
-                params,
-                timeout: 5000,
-              }
-            ),
+//         // Both APIs call in parallel
+//         const [tableDataResponse, lastResultResponse] =
+//           await Promise.all([
+//             upstream.get(
+//               `${NEW_CASINO_BASE_URL}/casino/data`,
+//               {
+//                 params,
+//                 timeout: 5000,
+//               }
+//             ),
 
-            upstream.get(
-              `${NEW_CASINO_BASE_URL}/casino/lastresultsnew`,
-              {
-                params: {
-                  key: PRIVATE_DATA_KEY,
-                  gType: gtype,
-                  key1: PRIVATE_DATA_KEY,
-                },
-                timeout: 5000,
-              }
-            ),
-          ]);
+//             upstream.get(
+//               `${NEW_CASINO_BASE_URL}/casino/lastresultsnew`,
+//               {
+//                 params: {
+//                   key: PRIVATE_DATA_KEY,
+//                   gType: gtype,
+//                   key1: PRIVATE_DATA_KEY,
+//                 },
+//                 timeout: 5000,
+//               }
+//             ),
+//           ]);
 
-        // Preserve original casino data structure
-        const responseData = {
-          ...tableDataResponse.data,
+//         // Preserve original casino data structure
+//         const responseData = {
+//           ...tableDataResponse.data,
 
-          results: {
-            data: lastResultResponse?.data?.data,
-          },
-        };
+//           results: {
+//             data: lastResultResponse?.data?.data,
+//           },
+//         };
 
-        return {
-          status: 200,
-          body: responseData,
-          success: true,
-        };
+//         return {
+//           status: 200,
+//           body: responseData,
+//           success: true,
+//         };
 
-      } catch (error) {
-        console.error(
-          "Casino Data Error:",
-          error.response?.data || error.message
-        );
+//       } catch (error) {
+//         console.error(
+//           "Casino Data Error:",
+//           error.response?.data || error.message
+//         );
 
-        return {
-          status: error.response?.status || 500,
-          body: {
-            error:
-              error.response?.data ||
-              "Internal Server Error",
-          },
-          success: false,
-        };
-      }
-    });
+//         return {
+//           status: error.response?.status || 500,
+//           body: {
+//             error:
+//               error.response?.data ||
+//               "Internal Server Error",
+//           },
+//           success: false,
+//         };
+//       }
+//     });
 
-    return sendResult(res, result);
+//     return sendResult(res, result);
 
-  } catch (error) {
-    console.error("Casino Data Error:", error.message);
+//   } catch (error) {
+//     console.error("Casino Data Error:", error.message);
 
-    return res.status(500).json({
-      error: "Internal Server Error",
-    });
-  }
-});
+//     return res.status(500).json({
+//       error: "Internal Server Error",
+//     });
+//   }
+// });
 
 // =====================================
 // START SERVER
