@@ -1109,7 +1109,7 @@ app.get("/casinoapi/casinoResult", async (req, res) => {
 // Cache: 600ms
 // =====================================
 
-app.get('/casinoapi/casinoData', async (req, res) => {
+app.get('/casinoapi/casinoData2', async (req, res) => {
   const { gtype } = req.query;
 
   if (!gtype) {
@@ -1156,7 +1156,7 @@ app.get('/casinoapi/casinoData', async (req, res) => {
 const NEW_CASINO_BASE_URL =
   "https://diamond-casino-api-demo-s2.daimond-api.site";
 
-app.get("/casinoapi/casinoData2", async (req, res) => {
+app.get("/casinoapi/casinoData", async (req, res) => {
   try {
     const { gtype } = req.query;
 
@@ -1218,7 +1218,7 @@ app.get("/casinoapi/casinoData2", async (req, res) => {
 
     if (lastResultsResult.status === "fulfilled") {
       lastResultsData =
-        lastResultsResult.value.data?.data?.data ?? {};
+        lastResultsResult.value.data?.data ?? {};
     } else {
       const error = lastResultsResult.reason;
 
@@ -1231,7 +1231,7 @@ app.get("/casinoapi/casinoData2", async (req, res) => {
 
     // Final JSON Response
     return res.status(200).json({
-      data: casinoDataResult.value.data?.data,
+      data: casinoDataResult.value.data,
       results: {
         data: lastResultsData,
       },
