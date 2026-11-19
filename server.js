@@ -1508,26 +1508,26 @@ app.get("/casinoapi/casinoData2", async (req, res) => {
                 timeout: 5000,
               }
             ),
-            upstream.get(
-              `${NEW_CASINO_BASE_URL}/casino/lastresultsnew`,
-              {
-                params: {
-                  key: PRIVATE_DATA_KEY,
-                  gType: gtype,
-                  key1: PRIVATE_DATA_KEY,
-                },
-                timeout: 5000,
-              }
-            ),
+            // upstream.get(
+            //   `${NEW_CASINO_BASE_URL}/casino/lastresultsnew`,
+            //   {
+            //     params: {
+            //       key: PRIVATE_DATA_KEY,
+            //       gType: gtype,
+            //       key1: PRIVATE_DATA_KEY,
+            //     },
+            //     timeout: 5000,
+            //   }
+            // ),
           ]);
 
         return {
           status: 200,
           body: {
             data: tableDataResponse?.data?.data,
-            results: {
-              data: lastResultResponse?.data?.data,
-            },
+            // results: {
+            //   data: lastResultResponse?.data?.data,
+            // },
           },
           success: true,
         };
