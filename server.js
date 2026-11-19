@@ -1218,14 +1218,14 @@ app.get("/casinoapi/casinoData2", async (req, res) => {
 
     if (lastResultsResult.status === "fulfilled") {
       lastResultsData =
-        lastResultsResult.value.data?.data ?? {};
+        lastResultsResult.value.data?.data?.data ?? {};
     } else {
       const error = lastResultsResult.reason;
 
       console.error("Casino Last Results Error:", {
         status: error.response?.status,
         url: error.config?.url,
-        response: error.response?.data,
+        response: error.response?.data?.data,
       });
     }
 
