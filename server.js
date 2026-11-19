@@ -1508,9 +1508,8 @@ app.get("/casinoapi/casinoData2", async (req, res) => {
                 timeout: 5000,
               }
             ),
-
             upstream.get(
-              `${NEW_CASINO_BASE_URL}/casinoresults`,
+              `${NEW_CASINO_BASE_URL}/casino/lastresultsnew`,
               {
                 params: {
                   key: PRIVATE_DATA_KEY,
