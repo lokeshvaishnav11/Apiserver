@@ -342,6 +342,7 @@ const crypto = require('node:crypto');
 const http = require('node:http');
 const https = require('node:https');
 const net = require('node:net');
+const { json } = require('node:stream/consumers');
 
 const app = express();
 
@@ -1490,23 +1491,20 @@ app.get("/casinoapi/casinoData2", async (req, res) => {
       });
     }
 
-    const key = cacheKey("casinoDataV2", [gtype]);
+    const cacheId = cacheKey("casinoDataV2", [gtype]);
 
-    const result = await cachedRequest(key, 600, async () => {
+    const result = await cachedRequest(cacheId, 600, async () => {
       try {
-        const params = {
-          key: PRIVATE_DATA_KEY,
-          gtype,
-          key1: PRIVATE_DATA_KEY,
-        };
-
-        // Both APIs call in parallel
         const [tableDataResponse, lastResultResponse] =
           await Promise.all([
             upstream.get(
               `${NEW_CASINO_BASE_URL}/casino/data`,
               {
-                params,
+                params: {
+                  key: PRIVATE_DATA_KEY,
+                  gtype,
+                  key1: PRIVATE_DATA_KEY,
+                },
                 timeout: 5000,
               }
             ),
@@ -1524,40 +1522,32 @@ app.get("/casinoapi/casinoData2", async (req, res) => {
             ),
           ]);
 
-        // Preserve original casino data structure
-        const responseData = {
-          ...tableDataResponse.data,
-
-          results: {
-            data: lastResultResponse?.data?.data,
-          },
-        };
-
         return {
           status: 200,
-          body: responseData,
+          body: {
+            data: tableDataResponse?.data?.data,
+            results: {
+              data: lastResultResponse?.data?.data,
+            },
+          },
           success: true,
         };
 
       } catch (error) {
-        console.error(
-          "Casino Data Error:",
-          error.response?.data || error.message
-        );
+        console.error("Casino Data Error:", error.message);
 
         return {
           status: error.response?.status || 500,
           body: {
-            error:
-              error.response?.data ||
-              "Internal Server Error",
+            error: error.response?.data || error.message,
           },
           success: false,
         };
       }
     });
 
-    return sendResult(res, result);
+    // Actual HTTP response JSON
+    return res.status(result.status).json(result.body);
 
   } catch (error) {
     console.error("Casino Data Error:", error.message);
