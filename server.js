@@ -1150,6 +1150,9 @@ app.get('/casinoapi/casinoData', async (req, res) => {
 // Redis Cache: 600ms
 // =====================================
 
+// Axios already imported in your file
+// const axios = require("axios");
+
 const NEW_CASINO_BASE_URL =
   "https://diamond-sports-api-demo-s2.daimond-api.site";
 
@@ -1159,76 +1162,89 @@ app.get("/casinoapi/casinoData2", async (req, res) => {
 
     if (!gtype) {
       return res.status(400).json({
-        error: "gtype query parameter is required",
+        error: "gtype is required",
       });
     }
 
-    const cacheId = cacheKey("casinoDataV2", [gtype]);
-
-    const result = await cachedRequest(cacheId, 600, async () => {
-      try {
-        const [tableDataResponse, lastResultResponse] =
-          await Promise.all([
-            upstream.get(
-              `${NEW_CASINO_BASE_URL}/casino/data`,
-              {
-                params: {
-                  key: PRIVATE_DATA_KEY,
-                  gtype,
-                  key1: PRIVATE_DATA_KEY,
-                },
-                timeout: 5000,
-              }
-            ),
-            upstream.get(
-              `${NEW_CASINO_BASE_URL}/casino/lastresultsnew`,
-              {
-                params: {
-                  key: PRIVATE_DATA_KEY,
-                  gType: gtype,
-                  key1: PRIVATE_DATA_KEY,
-                },
-                timeout: 5000,
-              }
-            ),
-          ]);
-
-        return {
-          status: 200,
-          body: {
-            data: tableDataResponse?.data?.data,
-            results: {
-              data: lastResultResponse?.data?.data,
-            },
-          },
-          success: true,
-        };
-
-      } catch (error) {
-        console.error("Casino Data Error:", error.message);
-
-        return {
-          status: error.response?.status || 500,
-          body: {
-            error: error.response?.data || error.message,
-          },
-          success: false,
-        };
+    // Direct Casino Data API
+    const casinoDataPromise = axios.get(
+      `${NEW_CASINO_BASE_URL}/casino/data`,
+      {
+        params: {
+          key: PRIVATE_DATA_KEY,
+          gtype: gtype,
+          key1: PRIVATE_DATA_KEY,
+        },
+        timeout: 10000,
       }
+    );
+
+    // Direct Casino Last Results API
+    const lastResultsPromise = axios.get(
+      `${NEW_CASINO_BASE_URL}/casino/lastresultsnew`,
+      {
+        params: {
+          key: PRIVATE_DATA_KEY,
+          gType: gtype,
+          key1: PRIVATE_DATA_KEY,
+        },
+        timeout: 10000,
+      }
+    );
+
+    // Dono API independently execute hongi
+    const [casinoDataResult, lastResultsResult] =
+      await Promise.allSettled([
+        casinoDataPromise,
+        lastResultsPromise,
+      ]);
+
+    if (casinoDataResult.status === "rejected") {
+      const error = casinoDataResult.reason;
+
+      console.error("Casino Data Error:", {
+        status: error.response?.status,
+        url: error.config?.url,
+        response: error.response?.data,
+      });
+
+      return res.status(error.response?.status || 502).json({
+        error: "Casino Data API failed",
+        status: error.response?.status || 502,
+      });
+    }
+
+    let lastResultsData = {};
+
+    if (lastResultsResult.status === "fulfilled") {
+      lastResultsData =
+        lastResultsResult.value.data?.data ?? {};
+    } else {
+      const error = lastResultsResult.reason;
+
+      console.error("Casino Last Results Error:", {
+        status: error.response?.status,
+        url: error.config?.url,
+        response: error.response?.data,
+      });
+    }
+
+    // Final JSON Response
+    return res.status(200).json({
+      data: casinoDataResult.value.data?.data,
+      results: {
+        data: lastResultsData,
+      },
     });
 
-    // Actual HTTP response JSON
-    return res.status(result.status).json(result.body);
-
   } catch (error) {
-    console.error("Casino Data Error:", error.message);
+    console.error("Casino API Error:", error.message);
 
     return res.status(500).json({
       error: "Internal Server Error",
     });
   }
 });
-
 
 // =====================================
 // CASINO DATA API
