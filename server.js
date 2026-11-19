@@ -388,9 +388,9 @@ app.get('/sportapi', async (req, res) =>
   fetchFromApi('', {}, res)
 );
 
-app.get('/casinoapi', async (req, res) =>
-  fetchFromApi('', {}, res)
-);
+// app.get('/casinoapi', async (req, res) =>
+//   fetchFromApi('', {}, res)
+// );
 
 // =====================================
 // 2. GET /sportapi/match-list
@@ -1056,6 +1056,10 @@ app.get('/sportapi/tv1/sports', async (req, res) => {
 // Redis Cache: 1000ms
 // =====================================
 
+const NEW_CASINO_BASE_URL =
+  "https://diamond-casino-api-demo-s2.daimond-api.site";
+
+
 app.get("/casinoapi/casinoResult", async (req, res) => {
   try {
     const { gtype, mid } = req.query;
@@ -1153,8 +1157,6 @@ app.get('/casinoapi/casinoData2', async (req, res) => {
 // Axios already imported in your file
 // const axios = require("axios");
 
-const NEW_CASINO_BASE_URL =
-  "https://diamond-casino-api-demo-s2.daimond-api.site";
 
 app.get("/casinoapi/casinoData", async (req, res) => {
   try {
