@@ -1510,7 +1510,7 @@ app.get("/casinoapi/casinoData2", async (req, res) => {
             ),
 
             upstream.get(
-              `${NEW_CASINO_BASE_URL}/casino/lastresultsnew`,
+              `${NEW_CASINO_BASE_URL}/casinoresults`,
               {
                 params: {
                   key: PRIVATE_DATA_KEY,
