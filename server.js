@@ -1154,7 +1154,7 @@ app.get('/casinoapi/casinoData', async (req, res) => {
 // const axios = require("axios");
 
 const NEW_CASINO_BASE_URL =
-  "https://diamond-sports-api-demo-s2.daimond-api.site";
+  "https://diamond-casino-api-demo-s2.daimond-api.site";
 
 app.get("/casinoapi/casinoData2", async (req, res) => {
   try {
